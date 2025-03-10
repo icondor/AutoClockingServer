@@ -1,0 +1,23 @@
+
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 3000,
+    "debug": true
+  },
+  "database": {
+    "path": "checkins.db"
+  },
+  "excel": {
+    "file_path": "file.xlsx"
+  },
+  "pdf": {
+    "output_dir": "pdf_reports/"
+  },
+  "logging": {
+    "file": "logs/app.log",
+    "max_size_mb": 10,
+    "backup_count": 5,
+    "level": "INFO"
+  }
+}
