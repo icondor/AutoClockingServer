@@ -19,5 +19,19 @@
     "max_size_mb": 10,
     "backup_count": 5,
     "level": "INFO"
-  }
+  },
+    "scheduler": {
+    "hour": 1,
+    "minute": 10
+  },
+  ,
+
+  "email_scheduler": {
+    "day_of_week": "3,4,5,6,7",  // Tuesday through Saturday
+    "hour": 0,
+    "minute": 20
+  },
+  "email_recipients": "abc@cd.fg,fff@ff.ro",
+  "sendgrid_api_key": "ghgjhdfjghjhdfgjfghfdg"
+
 }

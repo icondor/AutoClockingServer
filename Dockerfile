@@ -1,42 +1,33 @@
+# Use a Python base image with UTF-8 support
 FROM python:3.9-slim
 
-# Install system dependencies for packages like pandas and openpyxl
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libatlas-base-dev \
-    gcc \
-    libc6 \
-    libxml2 \
-    libxslt1-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create a non-root user for security
-RUN useradd -m appuser
-
+# Set working directory
 WORKDIR /app
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+# Set environment variables for locale and encoding
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV PYTHONUNBUFFERED 1
+
+# Install system dependencies (for locale and optional fonts)
+RUN apt-get update && apt-get install -y \
+    locales \
+    fonts-liberation \
+    && rm -rf /var/lib/apt/lists/* \
+    && locale-gen en_US.UTF-8
+
+# Copy application files
+COPY . /app
+
+# Copy the font file into the container
+RUN mkdir -p /app/fonts
+COPY fonts/ArialUnicode.ttf /app/fonts/ArialUnicode.ttf
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY TestServerApplication.py .
+# Expose the port
+EXPOSE 3001
 
-# Set environment variable to avoid Python buffering logs
-ENV PYTHONUNBUFFERED=1
-
-# Set ownership to non-root user
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Expose port
-EXPOSE 3000
-
-# Install Gunicorn for production-ready Flask server
-RUN pip install gunicorn
-
-# Start the Flask application with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "TestServerApplication:app"]
-
+# Command to run the application
+CMD ["python", "app.py"]

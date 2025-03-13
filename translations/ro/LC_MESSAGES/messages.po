@@ -44,3 +44,11 @@ msgstr "Already checked in today"
 msgid "Check-in recorded"
 msgstr "Check-in recorded"
 
+#: your_script.py
+msgid "Check-in"
+msgstr "Ora intrare"
+
+#: your_script.py
+msgid "Check-out"
+msgstr "Ora iesire"
+
