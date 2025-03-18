@@ -2,7 +2,6 @@ import pandas as pd
 import requests
 import random
 import time
-from datetime import datetime
 import json
 import os
 import logging
@@ -16,6 +15,9 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+# Define the default server URL as a constant
+DEFAULT_SERVER_URL = "http://localhost:3001/checkin"
 
 # Load configuration (same as your Flask app)
 def load_config(config_file='../config.json'):
@@ -53,14 +55,16 @@ def select_simulation_hosts(hostnames, percentage=0.8):
     return selected_hosts
 
 # Simulate a check-in by sending a POST request to the Flask app
-def simulate_checkin(hostname, server_url="http://localhost:3001/checkin"):
+def simulate_checkin(hostname, server_url=None):
+    # Use the provided server_url, or fall back to DEFAULT_SERVER_URL
+    target_url = server_url if server_url is not None else DEFAULT_SERVER_URL
     try:
         payload = {"hostname": hostname}
-        response = requests.post(server_url, json=payload)
+        response = requests.post(target_url, json=payload)
         response.raise_for_status()  # Raise an error for bad status codes
-        logging.info(f"Check-in for {hostname}: {response.status_code} - {response.json()}")
+        logging.info(f"Check-in for {hostname} to {target_url}: {response.status_code} - {response.json()}")
     except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to check in for {hostname}: {e}")
+        logging.error(f"Failed to check in for {hostname} to {target_url}: {e}")
 
 def main():
     # Load all hostnames from the Excel file
@@ -75,14 +79,17 @@ def main():
         logging.error("No hostnames selected for simulation. Exiting.")
         return
 
+    # Optionally set a custom server URL here
+    custom_server_url = "http://clj-devmantools01.global.sdl.corp:3001/checkin"  # Replace with your server URL
+
     logging.info(f"Starting check-in simulation with {len(simulation_hosts)} hostnames...")
     try:
         while True:
             # Randomly pick a hostname from the selected subset
             hostname = random.choice(simulation_hosts)
-            # Simulate a check-in
-            simulate_checkin(hostname)
-            # Wait for 10 seconds before the next check-in
+            # Simulate a check-in using the custom URL (or default if custom is None)
+            simulate_checkin(hostname, server_url=custom_server_url)
+            # Wait for 1 second before the next check-in
             time.sleep(1)
     except KeyboardInterrupt:
         logging.info("Simulation stopped by user.")

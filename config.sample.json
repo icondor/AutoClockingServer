@@ -21,17 +21,22 @@
     "level": "INFO"
   },
     "scheduler": {
-    "hour": 1,
-    "minute": 10
+    "hour": 11,
+    "minute": 36
   },
   ,
 
   "email_scheduler": {
     "day_of_week": "3,4,5,6,7",  // Tuesday through Saturday
-    "hour": 0,
-    "minute": 20
+    "hour": 11,
+    "minute": 37
   },
   "email_recipients": "abc@cd.fg,fff@ff.ro",
-  "sendgrid_api_key": "ghgjhdfjghjhdfgjfghfdg"
+  "sendgrid_api_key": "ghgjhdfjghjhdfgjfghfdg",
+  "fonts": {
+    "directory": "/Users/icondor/Downloads/IOANAHR/fonts",
+    "name": "ArialUnicode",
+    "file": "ArialUnicode.ttf"
+  }
 
 }

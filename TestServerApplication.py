@@ -85,32 +85,41 @@ def load_config(config_file='config.json'):
 CONFIG = load_config()
 
 PDF_COLUMNS = {
-    'name': 200,    # Increased to prevent overlap
-    'checkin': 300, # Adjusted
-    'checkout': 400, # Adjusted
+    'name': 100,    # Align with title and "Prezenti" at x=100
+    'checkin': 260, # 100 (name start) + 150 (name width) + 10 (padding)
+    'checkout': 360 # 260 (checkin start) + 60 (checkin width) + 10 (padding)
 }
 
 app = Flask(__name__)
 app.config['BABEL_DEFAULT_LOCALE'] = 'ro'
 babel = Babel(app)
 
-# Register a font that supports Romanian characters using settings from config.json
+# Initial debug log to confirm execution
+logging.info("Starting application initialization.")
+
+# Register a font that supports Romanian characters
 try:
-    font_path = os.path.join(CONFIG['fonts']['directory'], CONFIG['fonts']['file'])
-    pdfmetrics.registerFont(TTFont(CONFIG['fonts']['name'], font_path))
-    PDF_FONT = CONFIG['fonts']['name']
-    logging.info(f"Successfully loaded {CONFIG['fonts']['name']} font for PDF generation from {font_path}.")
-except Exception as e:
-    logging.warning(f"Could not load {CONFIG['fonts']['name']} font: {e}. Trying DejaVuSans as fallback.")
-    try:
-        # Try DejaVuSans from system fonts in the container
-        dejavu_path = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-        pdfmetrics.registerFont(TTFont('DejaVuSans', dejavu_path))
+    logging.info("Attempting to load DejaVuSans font.")
+    # Try DejaVuSans from the system path (Docker/Linux)
+    dejavu_path_docker = '/usr/share/fonts/dejavu/DejaVuSans.ttf'
+    # Updated path for macOS (user Library/Fonts)
+    dejavu_path_macos = '/Users/icondor/Library/Fonts/DejaVuSans.ttf'
+
+    if os.path.exists(dejavu_path_docker):
+        pdfmetrics.registerFont(TTFont('DejaVuSans', dejavu_path_docker))
         PDF_FONT = 'DejaVuSans'
-        logging.info(f"Successfully loaded DejaVuSans font for PDF generation from {dejavu_path}.")
-    except Exception as e2:
-        logging.warning(f"Could not load DejaVuSans font: {e2}. Falling back to Times-Roman.")
-        PDF_FONT = 'Times-Roman'
+        logging.info(f"Successfully loaded DejaVuSans font for PDF generation from {dejavu_path_docker}.")
+    elif os.path.exists(dejavu_path_macos):
+        pdfmetrics.registerFont(TTFont('DejaVuSans', dejavu_path_macos))
+        PDF_FONT = 'DejaVuSans'
+        logging.info(f"Successfully loaded DejaVuSans font for PDF generation from {dejavu_path_macos}.")
+    else:
+        logging.critical("No suitable font found for rendering Romanian characters. Application cannot proceed.")
+        raise RuntimeError(
+            "Failed to load DejaVuSans font. Please ensure 'fonts-dejavu-core' is installed in the container or DejaVuSans is available on the system.")
+except Exception as e:
+    logging.critical(f"Failed to load DejaVuSans font due to exception: {str(e)}. Application cannot proceed.")
+    raise RuntimeError(f"Font loading failed: {str(e)}")
 
 def get_current_time_in_romania():
     return datetime.now(romania_tz)
@@ -253,6 +262,30 @@ def save_checkin(hostname, checkin_time):
         logging.error(f"Database error while saving checkin for {hostname}: {e}")
         raise
 
+
+def truncate_text(text, font, font_size, max_width):
+    """
+    Truncates the text to fit within max_width, adding '...' if truncated.
+    Returns the truncated text.
+    """
+    ellipsis = "..."
+    ellipsis_width = pdfmetrics.stringWidth(ellipsis, font, font_size)
+    text_width = pdfmetrics.stringWidth(text, font, font_size)
+
+    if text_width <= max_width:
+        return text  # No truncation needed
+
+    # We need to truncate; start with an empty string and add characters until we exceed max_width
+    truncated_text = ""
+    for i in range(len(text)):
+        test_text = text[:i + 1] + ellipsis
+        if pdfmetrics.stringWidth(test_text, font, font_size) > max_width:
+            break
+        truncated_text = test_text
+
+    return truncated_text
+
+
 def generate_pdf_for_date(report_date=None):
     start_time = time()
     if report_date is None:
@@ -280,13 +313,13 @@ def generate_pdf_for_date(report_date=None):
         width, height = letter
 
         c.setFont(PDF_FONT, 14)
-        c.drawString(100, height - 40,
-                     gettext("Check-in Report for {date} ({tz})").format(date=report_date, tz=romania_tz.zone))
+        title = gettext("Check-in Report for {date} ({tz})").format(date=report_date, tz=romania_tz.zone)
+        c.drawString(100, height - 40, title)
 
         y_position = height - 80
         if checked_in:
             c.setFont(PDF_FONT, 12)
-            c.drawString(100, y_position, gettext("Checked in"))
+            c.drawString(100, y_position, gettext("Checked in"))  # "Prezenti"
             y_position -= 20
 
             c.setFont(PDF_FONT, 10)
@@ -301,8 +334,7 @@ def generate_pdf_for_date(report_date=None):
                     c.showPage()
                     y_position = height - 40
                     c.setFont(PDF_FONT, 14)
-                    c.drawString(100, y_position, gettext("Check-in Report for {date} ({tz})").format(date=report_date,
-                                                                                                      tz=romania_tz.zone))
+                    c.drawString(100, y_position, title)
                     y_position -= 40
 
                     c.setFont(PDF_FONT, 12)
@@ -322,11 +354,17 @@ def generate_pdf_for_date(report_date=None):
                     checkout_dt = datetime.fromisoformat(times['checkout_time'])
                     checkout_time_only = checkout_dt.strftime('%H:%M:%S')
                 name = AUTHORIZED_HOSTS.get(hostname, {}).get('name', 'Unknown')
-                text_width = pdfmetrics.stringWidth(name, PDF_FONT, 10)  # Use pdfmetrics.stringWidth
-                logging.debug(f"Name: {name}, Text width: {text_width}, Column width: {PDF_COLUMNS['name']}")
-                c.drawString(PDF_COLUMNS['name'], y_position, name)
-                c.drawString(PDF_COLUMNS['checkin'], y_position, checkin_time_only)
-                c.drawString(PDF_COLUMNS['checkout'], y_position, checkout_time_only or 'N/A')
+
+                # Truncate the name if it exceeds the column width
+                max_name_width = PDF_COLUMNS['checkin'] - PDF_COLUMNS['name'] - 10  # Leave 10 points of padding
+                name_for_pdf = truncate_text(name, PDF_FONT, 10, max_name_width)
+
+                text_width = pdfmetrics.stringWidth(name_for_pdf, PDF_FONT, 10)
+                logging.debug(
+                    f"Name to PDF: {name_for_pdf} (hex: {name_for_pdf.encode('utf-8').hex()}), Text width: {text_width}, Column width: {max_name_width}")
+                c.drawString(PDF_COLUMNS['name'], y_position, name_for_pdf)
+                c.drawString(PDF_COLUMNS['checkin'] + 10, y_position, checkin_time_only)  # Add padding
+                c.drawString(PDF_COLUMNS['checkout'] + 10, y_position, checkout_time_only or 'N/A')  # Add padding
                 y_position -= 15
 
             if absent_hosts:
@@ -337,8 +375,7 @@ def generate_pdf_for_date(report_date=None):
                 c.showPage()
                 y_position = height - 40
                 c.setFont(PDF_FONT, 14)
-                c.drawString(100, y_position,
-                             gettext("Check-in Report for {date} ({tz})").format(date=report_date, tz=romania_tz.zone))
+                c.drawString(100, y_position, title)
                 y_position -= 40
 
             c.setFont(PDF_FONT, 12)
@@ -355,8 +392,7 @@ def generate_pdf_for_date(report_date=None):
                     c.showPage()
                     y_position = height - 40
                     c.setFont(PDF_FONT, 14)
-                    c.drawString(100, y_position, gettext("Check-in Report for {date} ({tz})").format(date=report_date,
-                                                                                                      tz=romania_tz.zone))
+                    c.drawString(100, y_position, title)
                     y_position -= 40
                     c.setFont(PDF_FONT, 12)
                     c.drawString(100, y_position, gettext("Absents"))
@@ -367,9 +403,11 @@ def generate_pdf_for_date(report_date=None):
                     c.setFont(PDF_FONT, 10)
 
                 name = AUTHORIZED_HOSTS.get(hostname, {}).get('name', 'Unknown')
-                text_width = pdfmetrics.stringWidth(name, PDF_FONT, 10)  # Use pdfmetrics.stringWidth
-                logging.debug(f"Name: {name}, Text width: {text_width}, Column width: {PDF_COLUMNS['name']}")
-                c.drawString(PDF_COLUMNS['name'], y_position, name)
+                name_for_pdf = name
+                text_width = pdfmetrics.stringWidth(name_for_pdf, PDF_FONT, 10)
+                logging.debug(
+                    f"Name to PDF: {name_for_pdf} (hex: {name_for_pdf.encode('utf-8').hex()}), Text width: {text_width}, Column width: {PDF_COLUMNS['name']}")
+                c.drawString(PDF_COLUMNS['name'], y_position, name_for_pdf)
                 y_position -= 15
 
         c.save()

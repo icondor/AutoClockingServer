@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-03-06 20:51+0200\n"
-"PO-Revision-Date: 2025-03-06 20:58+0200\n"
+"POT-Creation-Date: 2025-03-14 19:08+0200\n"
+"PO-Revision-Date: 2025-03-14 19:09+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ro\n"
 "Language-Team: ro <LL@li.org>\n"
@@ -19,36 +19,49 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.17.0\n"
 
-#: TestServerApplication.py:106
+#: OLDTestServerApplication.py:245 OLDTestServerApplication.py:265
+#: OLDTestServerApplication.py:302 OLDTestServerApplication.py:319
+#: TestServerApplication.py:316
 #, python-brace-format
-msgid "Check-in Report for {date}"
-msgstr "Raport de prezenta pentru {date}"
+msgid "Check-in Report for {date} ({tz})"
+msgstr "Raport de prezenta pentru {date} ({tz})"
 
-#: TestServerApplication.py:108
+#: OLDTestServerApplication.py:250 OLDTestServerApplication.py:270
+#: TestServerApplication.py:322 TestServerApplication.py:341
 msgid "Checked in"
 msgstr "Prezenti"
 
-#: TestServerApplication.py:115
+#: OLDTestServerApplication.py:254 OLDTestServerApplication.py:273
+#: OLDTestServerApplication.py:310 OLDTestServerApplication.py:326
+#: TestServerApplication.py:326 TestServerApplication.py:344
+#: TestServerApplication.py:386 TestServerApplication.py:401
+msgid "Name"
+msgstr "Prenumele si Numele"
+
+#: OLDTestServerApplication.py:255 OLDTestServerApplication.py:274
+#: TestServerApplication.py:327 TestServerApplication.py:345
+msgid "Check-in"
+msgstr "Data de intrare"
+
+#: OLDTestServerApplication.py:256 OLDTestServerApplication.py:275
+#: TestServerApplication.py:328 TestServerApplication.py:346
+msgid "Check-out"
+msgstr "Data de iesire"
+
+#: OLDTestServerApplication.py:306 OLDTestServerApplication.py:323
+#: TestServerApplication.py:382 TestServerApplication.py:398
 msgid "Absents"
 msgstr "Absenti"
 
-#: TestServerApplication.py:140
+#: OLDTestServerApplication.py:475 TestServerApplication.py:540
 msgid "Unauthorized hostname"
-msgstr "Unauthorized hostname"
+msgstr ""
 
-#: TestServerApplication.py:142
-msgid "Already checked in today"
-msgstr "Already checked in today"
-
-#: TestServerApplication.py:145
+#: OLDTestServerApplication.py:481 TestServerApplication.py:546
 msgid "Check-in recorded"
-msgstr "Check-in recorded"
+msgstr ""
 
-#: your_script.py
-msgid "Check-in"
-msgstr "Ora intrare"
-
-#: your_script.py
-msgid "Check-out"
-msgstr "Ora iesire"
+#: OLDTestServerApplication.py:483 TestServerApplication.py:548
+msgid "Already checked in today"
+msgstr ""
 
