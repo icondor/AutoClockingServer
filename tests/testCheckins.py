@@ -74,7 +74,7 @@ def main():
         return
 
     # Select 80% of the hostnames for simulation
-    simulation_hosts = select_simulation_hosts(all_hostnames, percentage=0.8)
+    simulation_hosts = select_simulation_hosts(all_hostnames, percentage=0.9)
     if not simulation_hosts:
         logging.error("No hostnames selected for simulation. Exiting.")
         return
