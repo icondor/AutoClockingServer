@@ -1,0 +1,9 @@
+pybabel extract -F babel.cfg -o messages.pot .
+
+now for a new one in a language
+pybabel init -i messages.pot -d translations -l ro
+or for updating it with new strings
+pybabel update -i messages.pot -d translations -l ro
+
+in the end
+pybabel compile -d translations -l ro
